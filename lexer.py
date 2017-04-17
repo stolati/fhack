@@ -13,6 +13,8 @@ def get_lexer():
         'NUMBER',
         'POUND',
         'OTHER',
+        'DAY',
+        'MONTH',
         'TIME',
         'TOTAL',
         'SUBTOTAL',
@@ -43,12 +45,20 @@ def get_lexer():
         r'\*+'
         return t
 
-    def t_DATE(t):
-        r'\d+\/\d+\/\d+'
+    def t_DATE(t): 
+        r'(?P<month>\d{1,2})[-/.](?P<day>\d{1,2})[-/.](?P<year>\d{2}(?:\d{2})?)'
         return t
 
     def t_TIME(t):
-        r'\d+:\d+:\d+\s+(AM|PM)'
+        r'(?P<hour>\d{1,2}):(?P<minute>\d{2})(?::(?P<second>\d{2}))?\s*(?i)(?P<am_pm>[ap]m)?'
+        return t
+
+    def t_MONTH(t):
+        r'(?i)(?P<month>(January|February|March|April|May|June|July|August|September|October|November|December))'
+        return t
+
+    def t_DAY(t):
+        r'(?i)(?P<weekday>(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday))'
         return t
 
     def t_PERCENT(t):
@@ -73,15 +83,15 @@ def get_lexer():
         return t
 
     def t_SUBTOTAL(t):
-        r'(\w+ [ ])? [sS][uU][bB]\s?[tT][oO][tT][aA][lL][:]?'
+        r'(\w+ [ ])?(?i)sub.?total[:]?'
         return t
 
     def t_TOTAL(t):
-        r'[tT][oO][tT][aA][lL]'
+        r'(?i)(?:total|amount)(?:\w*due)?[:]?'
         return t
 
     def t_MONEY_AMOUNT(t):
-        r'\$?[0-9]+\.[0-9][0-9]'
+        r'[-(]?\$?(?P<money_amount>[\d,]*\.\d{2})'
         return t
         
     def t_NUMBER(t):
@@ -89,7 +99,6 @@ def get_lexer():
         return t
 
     def t_WORD_ITEMS(t):
-#        r'[a-zA-Z]+([ ]\w+)*'
         r'[\x21-\x7E]+([ ][\x21-\x7E]+)*'
         return t
 

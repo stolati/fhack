@@ -1,37 +1,27 @@
-from sklearn.naive_bayes import MultinomialNB
+from sklearn.svm import SVC
 from tokenizer import tokenize
 from lexer import get_lexer
 from feature_extraction import extract_features
-import csv
+import json
 import pickle
 
 fieldnames_array_path = 'fieldnames.pkl'
 
-def learn(feature_set_file_path, labels_file_path):
-    training_set = [];
-    labels = [];
+def learn(feature_order_file_path, *class_files, n_samples):
+    training_set = []
+    labels = []
 
-    feature_set_csv = open(feature_set_file_path)
-    feature_set_csv_reader = csv.reader(feature_set_csv)
+    feature_order = open(feature_order_file_path).read().split()
 
-    for row in feature_set_csv_reader:
-        set = []
-        for item in row:
-            if item == "":
-                set.append(0)
-            else:
-                set.append(int(item))
-        training_set.append(set)
+    for idx, class_file in enumerate(class_files):
+        with open(class_file) as labeled:
+            training_set.extend(
+                    [item.get(feature, 0) for feature in feature_order]
+                    for item in map(json.loads, labeled))
 
-    labels_csv = open(labels_file_path)
-    labels_csv_reader = csv.reader(labels_csv)
-
-    for row in labels_csv_reader:
-        for item in row:
-            if len(item):
-                labels.append(int(item))
-
-    classifier = MultinomialNB().fit(training_set, labels)
+            labels.extend([idx] * (len(training_set) - len(labels)))
+            
+    classifier = SVC(kernel="linear").fit(training_set, labels)
 #    classifier = None
     return classifier
 
