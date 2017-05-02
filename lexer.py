@@ -34,15 +34,15 @@ def get_lexer():
         return t
 
     def t_EQ_SECTION_BREAK(t):
-        r'=+'
+        r'==+'
         return t
 
     def t_DASH_SECTION_BREAK(t):
-        r'-+'
+        r'--+'
         return t
 
     def t_STAR_SECTION_BREAK(t):
-        r'\*+'
+        r'\*\*+'
         return t
 
     def t_DATE(t): 
@@ -91,7 +91,7 @@ def get_lexer():
         return t
 
     def t_MONEY_AMOUNT(t):
-        r'[-(]?\$?(?P<money_amount>[\d,]*\.\d{2})'
+        r'(?P<negative_sign>[-(])?\$?(?P<money_amount>[\d,]*\.\d{2})'
         return t
         
     def t_NUMBER(t):

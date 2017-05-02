@@ -16,111 +16,133 @@ CLASSES = [
    "unknown",
    "subtotal",
 ]
-LABELS_PATH = os.path.join(BASE_PATH, "labels.dat")
-FEATURE_DATA_PATH = os.path.join(BASE_PATH, "{}:{}.dat")
-FEATURE_NAME_PATH=os.path.join(BASE_PATH, "feature_names.dat")
 
-def manually_label(receipt, prices):
-    prices.sort(key=lambda elt: elt[0].lexpos)
+class DataSet(object):
+    LABELS_FILE = "labels.dat"
+    FEATURE_DATA_FILE = "{}-{}.dat"
+    FEATURE_NAME_FILE = "feature_names.dat"
 
-    receipt.seek(0)
-    for ii in range(len(prices)):
-        token, features = prices[ii]
+    def __init__(self, base_path, classes):
+        self.base_path = base_path
+        self.classes = classes
 
-        sys.stdout.write(receipt.read(token.lexpos - receipt.tell()))
-        sys.stdout.write("".join((Fore.GREEN, "[{}]".format(ii), Style.RESET_ALL)))
+    @property
+    def labels_path(self):
+        return os.path.join(self.base_path, self.LABELS_FILE)
 
-    sys.stdout.write(receipt.read())
-
-    prompt = "Which price is the subtotal (or 'skip' to skip this receipt)? "
-    which = input(prompt)
-    while not which.isdigit() and not which == "skip":
-        input(prompt)
-
-    return ([], []) if which == "skip" else (prices, [prices.pop(int(which))])
+    @property
+    def feature_names_path(self):
+        return os.path.join(self.base_path, self.FEATURE_NAME_FILE)
 
 
-def label(inpath, labels=None):
-    ret = ([], [])
+class DataSet(object):
 
-    receipt = StringIO(open(inpath).read())
-    prices = extract_prices(receipt.getvalue())
+    def label(self, inpath):
+        receipt = Receipt(inpath)
 
-    if labels:
-        prices = {elt[0].lexpos: elt for elt in prices}
+        prices = list(receipt.prices)
 
-        for lexpos, label in labels.items():
-            ret[label].append(prices[lexpos])
+        with receipt.open() as receipt_f:
+            for ii in range(len(receipt.prices)):
+                token = prices[ii]
 
-    else:
-        ret = manually_label(receipt, prices)
+                sys.stdout.write(receipt_f.read(token.position - receipt_f.tell()))
+                sys.stdout.write("".join((Fore.GREEN, "[{}]".format(ii), Style.RESET_ALL)))
 
-    return ret
+            sys.stdout.write(receipt_f.read())
 
+        prompt = "Which price is the subtotal (or 'skip' to skip this receipt)? "
+        which = input(prompt)
+        while not which.isdigit() and not which == "skip":
+            input(prompt)
 
-def label_and_record(inpath, outpath=".", labels=None, force=False):
-    processed = os.path.join(os.path.dirname(inpath), ".{}.processed".format(os.path.basename(inpath)))
+        return ([], []) if which == "skip" else (prices, [prices.pop(int(which))])
 
-    if os.path.exists(processed) and not force:
-        return
+    @classmethod
+    def label(cls, inpath, labels=None):
+        ret = tuple([] for c in self.classes)
 
-    mkdir_p(os.path.join(outpath, BASE_PATH))
+        receipt = StringIO(open(inpath).read())
+        prices = extract_prices(receipt.getvalue())
 
-    classes = label(inpath, labels=labels)
+        if labels:
+            prices = {elt[0].lexpos: elt for elt in prices}
 
-    store_labels = labels is None
-    labels = labels or []
+            for lexpos, label in labels.items():
+                try:
+                    ret[label].append(prices[lexpos])
+                except KeyError:
+                    ret[label].append(prices[lexpos-1])
 
-    with open(os.path.join(outpath, FEATURE_NAME_PATH), "a+") as feature_file, \
-            open(os.path.join(outpath, LABELS_PATH), "a") as labels_file:
-        feature_file.seek(0)
-        feature_names = set(feature_file.read().split())
+        else:
+            ret = cls.manually_label(receipt, prices)
 
-        for idx, name in enumerate(CLASSES):
-            with open(os.path.join(outpath, FEATURE_DATA_PATH.format(idx, name)), "a") as outfile:
-                for token, features in classes[idx]:
-                    json.dump(features, outfile)
-                    print(file=outfile)
-
-                    feature_names.update(features.keys())
-
-                    if store_labels:
-                        labels.append((token.lexpos, idx))
-
-        feature_file.seek(0)
-        feature_file.truncate()
-        feature_file.write("\n".join(sorted(feature_names)))
-
-        if store_labels:
-            json.dump((inpath, labels), labels_file)
-            print(file=labels_file)
-
-    open(processed, "w").close()
+        return ret
 
 
-def regenerate_features(inpath, outpath="."):
-    with open(os.path.join(inpath, LABELS_PATH)) as labels_file:
-        for line in labels_file:
-            receipt_path, labels = json.loads(line)
+    def label_and_record(self, inpath, outpath=".", labels=None, force=False):
+        processed = os.path.join(os.path.dirname(inpath), ".{}.processed".format(os.path.basename(inpath)))
 
-            label_and_record(receipt_path, outpath, labels=dict(labels), force=True)
+        if os.path.exists(processed) and not force:
+            return
+
+        mkdir_p(os.path.join(outpath, BASE_PATH))
+
+        classes = label(inpath, labels=labels)
+
+        store_labels = labels is None
+        labels = labels or []
+
+        with open(os.path.join(outpath, FEATURE_NAME_PATH), "a+") as feature_file, \
+                open(os.path.join(outpath, LABELS_PATH), "a") as labels_file:
+            feature_file.seek(0)
+            feature_names = set(feature_file.read().split())
+
+            for idx, name in enumerate(CLASSES):
+                with open(os.path.join(outpath, FEATURE_DATA_PATH.format(idx, name)), "a") as outfile:
+                    for token, features in classes[idx]:
+                        json.dump(features, outfile)
+                        print(file=outfile)
+
+                        feature_names.update(features.keys())
+
+                        if store_labels:
+                            labels.append((token.lexpos, idx))
+
+            feature_file.seek(0)
+            feature_file.truncate()
+            feature_file.write("\n".join(sorted(feature_names)))
+
+            if store_labels:
+                json.dump((inpath, labels), labels_file)
+                print(file=labels_file)
+
+        open(processed, "w").close()
 
 
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Must specify one or more receipts/directories!")
-        sys.exit(1)
+    def regenerate_features(inpath, outpath="."):
+        with open(os.path.join(inpath, LABELS_PATH)) as labels_file:
+            for line in labels_file:
+                receipt_path, labels = json.loads(line)
 
-    if os.path.basename(sys.argv[0]) == "regenerate":
-        regenerate_features(*sys.argv[1:3])
+                label_and_record(receipt_path, outpath, labels=dict(labels), force=True)
 
-    else:
-        for path in sys.argv[1:]:
-            if os.path.isdir(path):
-                for receipt in glob("{}/*.receipt".format(path)):
-                    print("Processing {}...".format(receipt))
-                    label_and_record(receipt)
 
-            else:
-                print("Processing {}...".format(path))
-                label_and_record(path)
+    if __name__ == "__main__":
+        if len(sys.argv) < 2:
+            print("Must specify one or more receipts/directories!")
+            sys.exit(1)
+
+        if os.path.basename(sys.argv[0]) == "regenerate":
+            regenerate_features(*sys.argv[1:3])
+
+        else:
+            for path in sys.argv[1:]:
+                if os.path.isdir(path):
+                    for receipt in glob("{}/*.receipt".format(path)):
+                        print("Processing {}...".format(receipt))
+                        label_and_record(receipt)
+
+                else:
+                    print("Processing {}...".format(path))
+                    label_and_record(path)
