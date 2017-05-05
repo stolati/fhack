@@ -35,28 +35,48 @@ class DataSet(object):
         return os.path.join(self.base_path, self.FEATURE_NAME_FILE)
 
 
-class DataSet(object):
+class SkipInput(Exception):
+    """Raised to signify that an input should be skipped"""
 
-    def label(self, inpath):
-        receipt = Receipt(inpath)
+
+class PriceDataSet(object):
+
+    def query_for_labels(self, receipt):
+        ret = ([],) * len(self.classes)
 
         prices = list(receipt.prices)
 
+        prompt = "Which price (or prices) is the {} ('skip' to skip this receipt)? "
+        for class_idx, class_name in enumerate(self.classes[1:], 1):
+            matches = None
+            while matches is None:
+                which = input(prompt.format(class_name)).strip()
+
+                if which == "skip":
+                    raise SkipInput
+
+                try:
+                    matches = map(int, which.split())
+                except ValueError:
+                    print("Invalid response.  Try again.")
+                else:
+                    ret[class_idx].extend(prices.pop(ii) for ii in matches)
+
+        ret[0].extend(prices)
+
+        return ret
+
+    def format_receipt(self, receipt):
         with receipt.open() as receipt_f:
             for ii in range(len(receipt.prices)):
-                token = prices[ii]
+                token = receipt.prices[ii]
 
                 sys.stdout.write(receipt_f.read(token.position - receipt_f.tell()))
                 sys.stdout.write("".join((Fore.GREEN, "[{}]".format(ii), Style.RESET_ALL)))
 
             sys.stdout.write(receipt_f.read())
 
-        prompt = "Which price is the subtotal (or 'skip' to skip this receipt)? "
-        which = input(prompt)
-        while not which.isdigit() and not which == "skip":
-            input(prompt)
-
-        return ([], []) if which == "skip" else (prices, [prices.pop(int(which))])
+        return self.query_for_labels(receipt)
 
     @classmethod
     def label(cls, inpath, labels=None):
