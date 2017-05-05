@@ -6,7 +6,7 @@ import sys
 from glob import glob
 from io import StringIO
 
-from colorama import Fore, Style
+from boto.mturk.connection import MTurkConnection
 
 from feature_extraction import extract_prices
 from util import mkdir_p
@@ -37,6 +37,16 @@ class DataSet(object):
 
 class SkipInput(Exception):
     """Raised to signify that an input should be skipped"""
+
+
+class MturkLabelingRequest(object):
+
+    def __init__(self, mturk, receipt, questions):
+        self.receipt = receipt
+        self.questions = questions
+        self.client = MTurkConnection()
+
+    def 
 
 
 class PriceDataSet(object):
