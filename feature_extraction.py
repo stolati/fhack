@@ -61,9 +61,6 @@ def extract_prices(receipt):
 
     return ret
 
-
-                
-
 class Receipt(object):
     def __init__(self, path):
         self.path = path

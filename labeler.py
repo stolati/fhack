@@ -76,27 +76,18 @@ class PriceDataSet(object):
 
         return ret
 
-    def format_receipt(self, receipt):
-        with receipt.open() as receipt_f:
-            for ii in range(len(receipt.prices)):
-                token = receipt.prices[ii]
-
-                sys.stdout.write(receipt_f.read(token.position - receipt_f.tell()))
-                sys.stdout.write("".join((Fore.GREEN, "[{}]".format(ii), Style.RESET_ALL)))
-
-            sys.stdout.write(receipt_f.read())
+    def prompt_for_labels(self, receipt):
+        receipt.format(sys.stdout, receipt.prices)
 
         return self.query_for_labels(receipt)
 
-    @classmethod
-    def label(cls, inpath, labels=None):
+    def label_prices(self, inpath, labels=None):
         ret = tuple([] for c in self.classes)
 
-        receipt = StringIO(open(inpath).read())
-        prices = extract_prices(receipt.getvalue())
+        receipt = Receipt(inpath)
 
         if labels:
-            prices = {elt[0].lexpos: elt for elt in prices}
+            prices = {elt.lexpos: elt for elt in receipt.prices}
 
             for lexpos, label in labels.items():
                 try:
@@ -105,7 +96,7 @@ class PriceDataSet(object):
                     ret[label].append(prices[lexpos-1])
 
         else:
-            ret = cls.manually_label(receipt, prices)
+            ret = self.prompt_for_labels(receipt)
 
         return ret
 
@@ -158,21 +149,21 @@ class PriceDataSet(object):
                 label_and_record(receipt_path, outpath, labels=dict(labels), force=True)
 
 
-    if __name__ == "__main__":
-        if len(sys.argv) < 2:
-            print("Must specify one or more receipts/directories!")
-            sys.exit(1)
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Must specify one or more receipts/directories!")
+        sys.exit(1)
 
-        if os.path.basename(sys.argv[0]) == "regenerate":
-            regenerate_features(*sys.argv[1:3])
+    if os.path.basename(sys.argv[0]) == "regenerate":
+        regenerate_features(*sys.argv[1:3])
 
-        else:
-            for path in sys.argv[1:]:
-                if os.path.isdir(path):
-                    for receipt in glob("{}/*.receipt".format(path)):
-                        print("Processing {}...".format(receipt))
-                        label_and_record(receipt)
+    else:
+        for path in sys.argv[1:]:
+            if os.path.isdir(path):
+                for receipt in glob("{}/*.receipt".format(path)):
+                    print("Processing {}...".format(receipt))
+                    label_and_record(receipt)
 
-                else:
-                    print("Processing {}...".format(path))
-                    label_and_record(path)
+            else:
+                print("Processing {}...".format(path))
+                label_and_record(path)
