@@ -1,14 +1,20 @@
-class Formatter(metaclass=ABCMeta):
+from abc import ABCMeta, abstractmethod
 
+from six import add_metaclass
+
+@add_metaclass(ABCMeta)
+class Formatter(object):
     @abstractmethod
-    def format(self, in_stream, out_stream, highlighted_tokens):
+    def format(self, in_stream, out_stream, highlighted_tokens=None):
         pass
 
     @abstractmethod
     def format_highlighted(self, in_stream, out_stream, token, token_idx):
         pass
 
-    def format_receipt(self, in_stream, out_stream, highlighted_tokens):
+    def format_receipt(self, in_stream, out_stream, highlighted_tokens=None):
+        highlighted_tokens = highlighted_tokens or []
+
         for ii in range(len(highlighted_tokens)):
             token = highlighted_tokens[ii]
 
@@ -21,7 +27,7 @@ class Formatter(metaclass=ABCMeta):
 
 
 class TerminalFormatter(Formatter):
-    def format(self, in_stream, out_stream, highlighted_tokens):
+    def format(self, in_stream, out_stream, highlighted_tokens=None):
         self.format_receipt(in_stream, out_stream, highlighted_tokens)
 
     def format_highlighted(self, in_stream, out_stream, token, token_idx):
@@ -29,11 +35,56 @@ class TerminalFormatter(Formatter):
         out_stream.write(in_stream.read(len(token.value)))
 
 
+class SkipInput(Exception):
+    """Raised to signify that an input should be skipped"""
+
+
 class Question(object):
     def __init__(self, text, choices=None, is_required=True):
         self.text = text
         self.choices = choices
         self.is_required = is_required
+
+    def format(self):
+       return "{}?".format(self.text)
+
+    def answer(self, answer_text):
+        if answer_text == "skip":
+            raise SkipInput
+
+        if self.choices and answer_text not in self.choices:
+            raise ValueError("{} not in {{{}}}".format(",".join(self.choices)))
+
+        return answer
+
+
+class BooleanQuestion(Question):
+    def __init__(self, text, is_required=True, short_circuit=None):
+        super(BooleanQuestion, self).__init__(text, ["yes", "no"], is_required, short_circuit)
+
+    def format(self):
+        return "{} ({})?".format(self.text, ",".join(self.choices))
+
+    def answer(self, answer_text):
+        answer = super(BooleanQuestion, self).answer(answer_text)
+        return True if self.answer == "yes" else False
+
+
+class MultipleChoiceQuestion(Question):
+    def answer(self, answer_text):
+        answers = set(answer_text.replace(",", " ").split())
+        invalid = answers - set(self.choices)
+        if invalid:
+            raise ValueError("{} not in {{{}}}"
+                    .format(",".join(invalid), ",".join(self.choices)))
+
+        return answers
+
+class QuestionSet(list):
+    def __init__(self, questions):
+        self.questions = questions
+
+
 
 
 class QuestionFormFormatter(Formatter):
@@ -45,7 +96,7 @@ class QuestionFormFormatter(Formatter):
         self.questions = questions
 
     #override
-    def format(self, in_stream, out_stream, highlighted_tokens):
+    def format(self, in_stream, out_stream, highlighted_tokens=None):
         root = etree.Element("QuestionForm", nsmap={None: self.XML_NS})
 
         root.append(self.make_overview(in_stream, root, highlighted_tokens))
@@ -60,7 +111,7 @@ class QuestionFormFormatter(Formatter):
         out_stream.write(in_stream.read(len(token.value)))
         out_stream.write("</b><sup><font color='green'>{}</font></sup>".format(token_idx))
     
-    def make_overview(self, in_stream, root, highlighted_tokens):
+    def make_overview(self, in_stream, root, highlighted_tokens=None):
         ret = etree.Element("Overview")
         ret.append(self._make_elt("Title", self.title))
         ret.append(self._make_elt("Text", self.desc))
@@ -70,7 +121,7 @@ class QuestionFormFormatter(Formatter):
 
         return ret
 
-    def make_question(self, question, highlighted_tokens):
+    def make_question(self, question, highlighted_tokens=None):
         ret = etree.Element("Question")
 
         ret.append(self._make_elt("IsRequired", "true" if question.is_required else "false"))
@@ -87,10 +138,13 @@ class QuestionFormFormatter(Formatter):
             selection_answer.append(self._make_elt("StyleSuggestion", "radiobutton"))
             selections = question.choices
 
-        else:
+        elif highlighted_tokens:
             selection_answer.append(self._make_elt("StyleSuggestion", "multichooser"))
             selection_answer.append(self._make_elt("MinSelectionCount", "0"))
             selections = [(str(idx), t.value) for (idx, t) in enumerate(highlighted_tokens, 1)]
+
+        else:
+            raise ValueError("No choices provided for question '{}'".format(question.text))
 
         selection_answer.append(etree.Element("Selections"))
         for identifier, text in selections:
@@ -105,7 +159,7 @@ class QuestionFormFormatter(Formatter):
 
         return ret
 
-    def _receipt_cdata(self, in_stream, highlighted_tokens):
+    def _receipt_cdata(self, in_stream, highlighted_tokens=None):
         ret = StringIO()
         ret.write("<p><pre>")
         self.format_receipt(in_stream, ret, highlighted_tokens)
