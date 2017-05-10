@@ -6,7 +6,9 @@ def chunks(file_to_read, chunk_size=io.DEFAULT_BUFFER_SIZE, *open_args, **open_k
         file_to_read = open(file_to_read, *open_args, **open_kwargs)
 
     with file_to_read:
-        yield from each(lambda: file_to_read.read(chunk_size))
+        # yield from each(lambda: file_to_read.read(chunk_size))
+        for chunk in each(lambda: file_to_read.read(chunk_size)):
+            yield chunk
 
 def each(next):
     value = next()

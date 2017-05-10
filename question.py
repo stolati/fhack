@@ -1,6 +1,8 @@
+from __future__ import absolute_import, print_function, division, unicode_literals
+
 from abc import ABCMeta, abstractmethod
 
-from six import add_metaclass
+from six import add_metaclass, text_type
 
 @add_metaclass(ABCMeta)
 class Formatter(object):
@@ -141,7 +143,7 @@ class QuestionFormFormatter(Formatter):
         elif highlighted_tokens:
             selection_answer.append(self._make_elt("StyleSuggestion", "multichooser"))
             selection_answer.append(self._make_elt("MinSelectionCount", "0"))
-            selections = [(str(idx), t.value) for (idx, t) in enumerate(highlighted_tokens, 1)]
+            selections = [(text_type(idx), t.value) for (idx, t) in enumerate(highlighted_tokens, 1)]
 
         else:
             raise ValueError("No choices provided for question '{}'".format(question.text))

@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, division, unicode_literals
+
 import json
 import os
 import sys
@@ -6,7 +8,7 @@ from glob import glob
 from io import StringIO
 
 from boto.mturk.connection import MTurkConnection
-from six import add_metaclass
+from six import add_metaclass, text_type
 from six.moves import input
 
 from receipt import Receipt
@@ -59,7 +61,7 @@ class DataSet(object):
                 try:
                     answer = question.answer(input(question.format()).strip())
                 except ValueError as e:
-                    print(str(e))
+                    print(text_type(e))
                 else:
                     yield answer
                     break
@@ -78,7 +80,7 @@ class PriceDataSet(DataSet):
         return [
             MultipleChoiceQuestion(
                 "Which price (or prices) is the {}".format(name),
-                choices=map(str, list(range(len(receipt.prices), 1))))
+                choices=map(text_type, list(range(len(receipt.prices), 1))))
             for name in self.class_names[1:]
         ] 
 

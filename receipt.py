@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, division, unicode_literals
+
 import pickle
 import io
 from abc import ABCMeta, abstractmethod
@@ -5,6 +7,7 @@ from io import BytesIO, StringIO
 
 from colorama import Fore, Style
 from lxml import etree
+from six import text_type
 
 from collections import defaultdict
 from lexer import get_lexer
@@ -49,7 +52,7 @@ class Receipt(object):
             self._prices = [t for t in self.tokens if t.type == "MONEY_AMOUNT"]
             for token in self._prices:
                 price = int(token._match.group("money_amount")
-                                 .translate(str.maketrans("", "", ",.")))
+                                 .translate(text_type.maketrans("", "", ",.")))
 
                 if token._match.group("negative_sign"):
                     price = -price
