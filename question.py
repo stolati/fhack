@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function, division, unicode_litera
 from abc import ABCMeta, abstractmethod
 
 from six import add_metaclass, text_type
+from colorama import Fore, Style
 
 @add_metaclass(ABCMeta)
 class Formatter(object):
@@ -20,7 +21,7 @@ class Formatter(object):
         for ii in range(len(highlighted_tokens)):
             token = highlighted_tokens[ii]
 
-            out_stream.write(in_stream.read(token.position - in_stream.tell()))
+            out_stream.write(in_stream.read(token._position - in_stream.tell()))
 
             self.format_highlighted(in_stream, out_stream, token, ii + 1)
 
@@ -33,7 +34,7 @@ class TerminalFormatter(Formatter):
         self.format_receipt(in_stream, out_stream, highlighted_tokens)
 
     def format_highlighted(self, in_stream, out_stream, token, token_idx):
-        out_stream.write("".join((Fore.GREEN, "[{}]".format(token_idx, Style.RESET_ALL))))
+        out_stream.write("".join((Fore.GREEN, "[{}]".format(token_idx), Style.RESET_ALL)))
         out_stream.write(in_stream.read(len(token.value)))
 
 
@@ -48,7 +49,7 @@ class Question(object):
         self.is_required = is_required
 
     def format(self):
-       return "{}?".format(self.text)
+       return "{}? ".format(self.text)
 
     def answer(self, answer_text):
         if answer_text == "skip":
@@ -65,7 +66,7 @@ class BooleanQuestion(Question):
         super(BooleanQuestion, self).__init__(text, ["yes", "no"], is_required, short_circuit)
 
     def format(self):
-        return "{} ({})?".format(self.text, ",".join(self.choices))
+        return "{} ({})? ".format(self.text, ",".join(self.choices))
 
     def answer(self, answer_text):
         answer = super(BooleanQuestion, self).answer(answer_text)
@@ -74,19 +75,20 @@ class BooleanQuestion(Question):
 
 class MultipleChoiceQuestion(Question):
     def answer(self, answer_text):
+        if answer_text == "skip":
+            raise SkipInput
+
+        if not answer_text:
+            raise ValueError("No answer provided; try again!")
+
         answers = set(answer_text.replace(",", " ").split())
+        
         invalid = answers - set(self.choices)
         if invalid:
             raise ValueError("{} not in {{{}}}"
                     .format(",".join(invalid), ",".join(self.choices)))
 
         return answers
-
-class QuestionSet(list):
-    def __init__(self, questions):
-        self.questions = questions
-
-
 
 
 class QuestionFormFormatter(Formatter):

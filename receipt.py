@@ -5,7 +5,6 @@ import io
 from abc import ABCMeta, abstractmethod
 from io import BytesIO, StringIO
 
-from colorama import Fore, Style
 from lxml import etree
 from six import text_type
 
@@ -30,7 +29,7 @@ class Receipt(object):
         for idx, token in enumerate(self.lexer):
             # .lexpos refers to the lexer's *current* position, not the token's.
             token._position = token.lexpos
-            token._match = token.lexmatch
+            token._match = self.lexer.lexmatch
             token._index = idx
 
             self.tokens.append(token)
@@ -59,7 +58,7 @@ class Receipt(object):
 
                 token._price_in_cents = price
 
-            for idx, token in enumerate(sorted(self._prices, lambda t: t._price_in_cents)):
+            for idx, token in enumerate(sorted(self._prices, key=lambda t: t._price_in_cents)):
                 token._price_order = idx
 
         return self._prices

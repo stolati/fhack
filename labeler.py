@@ -10,7 +10,7 @@ from receipt import Receipt
 from util import mkdir_p
 
 def label_for_datasets(path, datasets, force=False):
-    processed = os.path.join(os.path.dirname(inpath), ".{}.processed".format(os.path.basename(inpath)))
+    processed = os.path.join(os.path.dirname(path), ".{}.processed".format(os.path.basename(path)))
 
     if os.path.exists(processed) and not force:
         return
@@ -19,7 +19,6 @@ def label_for_datasets(path, datasets, force=False):
 
     if force or any(d.ingested(path) for d in datasets):
         receipt = Receipt(path)
-        receipt.format(sys.stdout)
 
         for dataset in datasets:
             dataset.ingest(receipt)
@@ -48,4 +47,4 @@ if __name__ == "__main__":
 
             else:
                 print("Processing {}...".format(path))
-                label_for_datasets(path, datasets)
+                label_for_datasets(path, datasets, force=True)

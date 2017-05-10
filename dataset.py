@@ -11,6 +11,7 @@ from boto.mturk.connection import MTurkConnection
 from six import add_metaclass, text_type
 from six.moves import input
 
+from question import MultipleChoiceQuestion
 from receipt import Receipt
 from util import mkdir_p
 
@@ -21,6 +22,7 @@ class DataSet(object):
     FEATURE_NAME_FILE = "feature_names.dat"
 
     def __init__(self, name, base_path, class_names):
+        self.name = name
         self.base_path = os.path.join(base_path, self.name)
         self.class_names = class_names
 
@@ -54,7 +56,7 @@ class DataSet(object):
         return ret
 
     def prompt(self, receipt, questions, highlighted_tokens=None):
-        receipt.format(sys.stdout, highlighted_tokens, TerminalFormatter())
+        receipt.format(sys.stdout, highlighted_tokens)
 
         for question in questions:
             while True:
@@ -80,12 +82,12 @@ class PriceDataSet(DataSet):
         return [
             MultipleChoiceQuestion(
                 "Which price (or prices) is the {}".format(name),
-                choices=map(text_type, list(range(len(receipt.prices), 1))))
+                choices=list(map(text_type, list(range(1, len(receipt.prices) + 1)))))
             for name in self.class_names[1:]
         ] 
 
     def prompt_for_labels(self, receipt):
-        ret = ([],) * len(self.class_names)
+        ret = tuple([] for i in self.class_names)
 
         answers = self.prompt(receipt, self.get_questions(receipt), receipt.prices)
         prices = dict(enumerate(receipt.prices, 1))
@@ -98,14 +100,15 @@ class PriceDataSet(DataSet):
 
         return ret
 
-    def extract_features(self, token, receipt, sorted_prices):
+    def extract_features(self, token, receipt):
         features = {}
 
-        receipt_length = len(receipt.lexer.data)
+        receipt_length = len(receipt.text)
 
         features[token.type] = 1
-        features["document_position"] = float(token._position) / receipt_length
-        features["order_largest_to_smallest"] = token._price_order
+        features["document_position"] = token._position / receipt_length
+        features["order_largest_to_smallest"] = (
+                (len(receipt.prices) - token._price_order) / len(receipt.prices))
         
         closest_tokens = 3
         features.update(
@@ -114,8 +117,8 @@ class PriceDataSet(DataSet):
                     receipt.tokens[token._index - closest_tokens:token._index], 1))
         features.update(
                 ("closest_after_{}".format(t.type), idx)
-                for idx, t in enumerate(
-                    reversed(tokens[token._index + 1:token._index + closest_tokens + 1]), 1))
+                for idx, t in enumerate(reversed(
+                        receipt.tokens[token._index + 1:token._index + closest_tokens + 1]), 1))
 
         return features
 
@@ -124,11 +127,10 @@ class PriceDataSet(DataSet):
 
         classes = (self.get_labeled_tokens(receipt, receipt.prices, labels)
                 if labels
-                else self.prompt_for_labels(receipt_path, labels=labels))
+                else self.prompt_for_labels(receipt))
 
         store_labels = labels is None
         labels = labels or []
-        sorted_prices = sorted(receipt.prices, lambda t: t.price_in_cents)
 
         with open(self.feature_names_path, "a+") as feature_file, \
                 open(self.labels_path, "a") as labels_file:
@@ -138,7 +140,7 @@ class PriceDataSet(DataSet):
             for idx, name in enumerate(self.class_names):
                 with open(self.feature_data_path(idx, name), "a") as outfile:
                     for token in classes[idx]:
-                        features = self.extract_features(token, receipt, sorted_prices)
+                        features = self.extract_features(token, receipt)
 
                         print(json.dumps(features), file=outfile)
 
@@ -152,14 +154,14 @@ class PriceDataSet(DataSet):
             feature_file.write("\n".join(sorted(feature_names)))
 
             if store_labels:
-                print(json.dumps((receipt.path, labels)), file=self.labels_file)
+                print(json.dumps((receipt.path, labels)), file=labels_file)
 
     def regenerate_features(self, inpath, outpath="."):
         os.unlink(self.feature_names_path)
         for idx, name in enumerate(self.class_names):
             os.unlink(self.feature_data_path(idx, name))
 
-        with open(os.path.join(inpath, LABELS_PATH)) as labels_file:
+        with open(self.labels_path) as labels_file:
             for line in labels_file:
                 receipt_path, labels = json.loads(line)
 
