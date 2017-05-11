@@ -1,7 +1,8 @@
 from __future__ import absolute_import, print_function, division, unicode_literals
 
-import pickle
 import io
+import pickle
+import re
 from abc import ABCMeta, abstractmethod
 from io import BytesIO, StringIO
 
@@ -52,8 +53,7 @@ class Receipt(object):
         if not hasattr(self, "_prices"):
             self._prices = [t for t in self.tokens if t.type == "MONEY_AMOUNT"]
             for token in self._prices:
-                price = int(token._match.group("money_amount")
-                                 .translate(text_type.maketrans("", "", ",.")))
+                price = int(re.sub(r"[,.]", "", token._match.group("money_amount")))
 
                 if token._match.group("negative_sign"):
                     price = -price

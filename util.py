@@ -1,3 +1,4 @@
+import errno
 import io
 import os
 
@@ -19,5 +20,6 @@ def each(next):
 def mkdir_p(path):
     try:
         os.makedirs(path)
-    except FileExistsError:
-        pass
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
