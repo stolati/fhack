@@ -34,6 +34,8 @@ class Receipt(object):
 
             self.tokens.append(token)
 
+        self.by_position = {t._position: t for t in self.tokens}
+
     def open(self):
         return open(self.path)
 

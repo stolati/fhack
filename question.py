@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, division, unicode_literals
 
+import re
 from abc import ABCMeta, abstractmethod
 
 from six import add_metaclass, text_type
@@ -43,37 +44,13 @@ class SkipInput(Exception):
 
 
 class Question(object):
-    def __init__(self, text, choices=None, is_required=True):
+    def __init__(self, text, is_required=True):
         self.text = text
-        self.choices = choices
         self.is_required = is_required
 
     def format(self):
-       return "{}? ".format(self.text)
+        return "{}? ".format(self.text)
 
-    def answer(self, answer_text):
-        if answer_text == "skip":
-            raise SkipInput
-
-        if self.choices and answer_text not in self.choices:
-            raise ValueError("{} not in {{{}}}".format(",".join(self.choices)))
-
-        return answer
-
-
-class BooleanQuestion(Question):
-    def __init__(self, text, is_required=True, short_circuit=None):
-        super(BooleanQuestion, self).__init__(text, ["yes", "no"], is_required, short_circuit)
-
-    def format(self):
-        return "{} ({})? ".format(self.text, ",".join(self.choices))
-
-    def answer(self, answer_text):
-        answer = super(BooleanQuestion, self).answer(answer_text)
-        return True if self.answer == "yes" else False
-
-
-class MultipleChoiceQuestion(Question):
     def answer(self, answer_text):
         if answer_text == "skip":
             raise SkipInput
@@ -81,14 +58,85 @@ class MultipleChoiceQuestion(Question):
         if not answer_text:
             raise ValueError("No answer provided; try again!")
 
-        answers = set(answer_text.replace(",", " ").split())
+        return answer_text
+
+class MultipleChoiceQuestion(Question):
+    def __init__(self, text, choices, hide_choices=False, max_choices=None, is_required=True):
+        super(MultipleChoiceQuestion, self).__init__(text, is_required)
+
+        self.choices = choices
+        self.display_choices = None
+        self.abbreviations = {}
+        self.max_choices = max_choices if max_choices else len(choices)
+
+        if not hide_choices:
+            self.display_choices = list(choices)
+
+            for ii, choice in enumerate(self.choices):
+                # Did the caller specify an abbreviation?
+                patt = re.compile(r'\[(\w)\]')
+                m = patt.search(choice)
+                if m:
+                    old_mapping = None
+                    choice = patt.sub(r"\1", choice)
+                    abbrev = m.group(1)
+
+                    if abbrev in self.abbreviations:
+                        old_choice = self.abbreviations[abbrev]
+
+                    self.abbreviations[m.group(1)] = choice
+                    self.choices[ii] = choice
+
+                    if old_mapping:
+                        self._abbreviate(self.choices.index(old_choice))
+
+                # If not, generate one automatically.
+                else:
+                    self._abbreviate(ii)
+
+    def _abbreviate(self, choice_idx):
+        choice = self.choices[choice_idx]
+
+        for ii in range(len(choice)):
+            if choice[ii] not in self.abbreviations:
+                self.display_choices[choice_idx] = "".join(
+                        [choice[:ii], "[", choice[ii], "]", choice[ii + 1:]])
+
+                self.abbreviations[choice[ii]] = choice
+                
+                break
+
+    def format(self):
+        if self.display_choices:
+            return "{} ({})? ".format(self.text, ",".join(self.display_choices))
+        
+        return super(MultipleChoiceQuestion, self).format()
+
+    def answer(self, answer_text):
+        answer_text = super(MultipleChoiceQuestion, self).answer(answer_text)
+
+        answers = set(self.abbreviations.get(a, a) for a in answer_text.replace(",", " ").split())
+
+        if len(answers) > self.max_choices:
+            raise ValueError("Too many values selected; you may only pick {}".format(self.max_choices))
         
         invalid = answers - set(self.choices)
         if invalid:
             raise ValueError("{} not in {{{}}}"
                     .format(",".join(invalid), ",".join(self.choices)))
 
-        return answers
+        return list(answers)
+
+
+class BooleanQuestion(MultipleChoiceQuestion):
+    def __init__(self, text, is_required=True):
+        super(BooleanQuestion, self).__init__(text, ["yes", "no"], is_required)
+
+    def answer(self, answer_text):
+        answer = super(BooleanQuestion, self).answer(answer_text)
+        return True if self.answer == "yes" else False
+
+
 
 
 class QuestionFormFormatter(Formatter):

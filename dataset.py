@@ -38,20 +38,18 @@ class DataSet(object):
         return os.path.join(self.base_path,
                             self.FEATURE_DATA_FILE.format(classno, name))
 
-    @abstractmethod
-    def prompt_for_labels(self, receipt):
-        pass
-
     def get_labeled_tokens(self, receipt, highlighted_tokens, labels):
         ret = tuple([] for c in self.class_names)
 
-        by_position = {elt._position: elt for elt in highlighted_tokens}
+        token_positions = {elt._position for elt in highlighted_tokens}
 
         for position, label in labels.items():
-            try:
-                ret[label].append(by_position[position])
-            except KeyError:
-                ret[label].append(by_position[position-1])
+            if position in token_positions:
+                ret[label].append(position)
+            elif position - 1 in token_positions:
+                ret[label].append(position)
+            else:
+                raise KeyError("There is no token at position {}".format(position))
 
         return ret
 
@@ -68,6 +66,78 @@ class DataSet(object):
                     yield answer
                     break
 
+    def ingest(self, receipt, classes, labels=None):
+        mkdir_p(self.base_path)
+
+        store_labels = labels is None
+        labels = labels or []
+
+        with open(self.feature_names_path, "a+") as feature_file, \
+                open(self.labels_path, "a") as labels_file:
+            feature_file.seek(0)
+            feature_names = set(feature_file.read().split())
+
+            for idx, name in enumerate(self.class_names):
+                with open(self.feature_data_path(idx, name), "a") as outfile:
+                    for position in classes[idx]:
+                        features = self.extract_features(receipt, position)
+
+                        print(json.dumps(features), file=outfile)
+
+                        feature_names.update(features.keys())
+
+                        if store_labels:
+                            labels.append((position, idx))
+
+            feature_file.seek(0)
+            feature_file.truncate()
+            feature_file.write("\n".join(sorted(feature_names)))
+
+            if store_labels:
+                print(json.dumps((receipt.path, labels)), file=labels_file)
+
+        return True
+
+
+class ReceiptDataSet(DataSet):
+    CLASS_NAMES = [
+        "other",
+        "bill",
+        "cc_slip",
+        "closed_receipt",
+    ]
+    QUESTION = MultipleChoiceQuestion(
+        "Which type of document is this",
+        choices=CLASS_NAMES[:-1] + ["closed_[r]eceipt"],
+        max_choices=1)
+
+    def __init__(self, base_path):
+        super(ReceiptDataSet, self).__init__("receipts", base_path, self.CLASS_NAMES)
+
+    def prompt_for_label(self, receipt):
+        response = list(self.prompt(receipt, [self.QUESTION]))
+        answer = response[0][0]
+        
+        return self.class_names.index(answer)
+
+    def extract_features(self, receipt, *args):
+        return {}
+
+    def ingest(self, receipt, labels=None):
+        classidx = labels[0] if labels else self.prompt_for_label(receipt)
+
+        classes = tuple([] for i in self.class_names)
+        classes[classidx].append(0) # We are labeling the entire receipt
+
+        ret = super(ReceiptDataSet, self).ingest(receipt, classes, labels)
+
+        # Stop processing if this is not a receipt
+        if classidx == 0:
+            return False
+
+        return ret
+
+
 class PriceDataSet(DataSet):
     CLASS_NAMES = [
        "unknown",
@@ -82,7 +152,8 @@ class PriceDataSet(DataSet):
         return [
             MultipleChoiceQuestion(
                 "Which price (or prices) is the {}".format(name),
-                choices=list(map(text_type, list(range(1, len(receipt.prices) + 1)))))
+                choices=list(map(text_type, list(range(1, len(receipt.prices) + 1)))),
+                hide_choices=True)
             for name in self.class_names[1:]
         ] 
 
@@ -94,13 +165,15 @@ class PriceDataSet(DataSet):
 
         for class_idx, answer in enumerate(answers, 1):
             for which in answer:
-                ret[class_idx].append(prices.pop(int(which)))
+                ret[class_idx].append(prices.pop(int(which))._position)
 
-        ret[0].extend(prices.values())
+        ret[0].extend(t._position for t in prices.values())
 
         return ret
 
-    def extract_features(self, token, receipt):
+    def extract_features(self, receipt, position):
+        token = receipt.by_position[position]
+
         features = {}
 
         receipt_length = len(receipt.text)
@@ -123,38 +196,11 @@ class PriceDataSet(DataSet):
         return features
 
     def ingest(self, receipt, labels=None):
-        mkdir_p(self.base_path)
-
         classes = (self.get_labeled_tokens(receipt, receipt.prices, labels)
                 if labels
                 else self.prompt_for_labels(receipt))
 
-        store_labels = labels is None
-        labels = labels or []
-
-        with open(self.feature_names_path, "a+") as feature_file, \
-                open(self.labels_path, "a") as labels_file:
-            feature_file.seek(0)
-            feature_names = set(feature_file.read().split())
-
-            for idx, name in enumerate(self.class_names):
-                with open(self.feature_data_path(idx, name), "a") as outfile:
-                    for token in classes[idx]:
-                        features = self.extract_features(token, receipt)
-
-                        print(json.dumps(features), file=outfile)
-
-                        feature_names.update(features.keys())
-
-                        if store_labels:
-                            labels.append((token.lexpos, idx))
-
-            feature_file.seek(0)
-            feature_file.truncate()
-            feature_file.write("\n".join(sorted(feature_names)))
-
-            if store_labels:
-                print(json.dumps((receipt.path, labels)), file=labels_file)
+        return super(PriceDataSet, self).ingest(receipt, classes, labels)
 
     def regenerate_features(self, inpath, outpath="."):
         os.unlink(self.feature_names_path)

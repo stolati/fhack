@@ -5,7 +5,8 @@ from __future__ import absolute_import, print_function, division, unicode_litera
 import os
 import sys
 
-from dataset import PriceDataSet
+from dataset import PriceDataSet, ReceiptDataSet
+from question import SkipInput
 from receipt import Receipt
 from util import mkdir_p
 
@@ -17,11 +18,14 @@ def label_for_datasets(path, datasets, force=False):
 
     receipt = Receipt(path)
 
-    if force or any(d.ingested(path) for d in datasets):
-        receipt = Receipt(path)
-
+    try:
         for dataset in datasets:
-            dataset.ingest(receipt)
+            # Stop processing if an earlier labeler requests it
+            if not dataset.ingest(receipt):
+                break
+
+    except SkipInput:
+        print("Skipping!")
 
     # touch the touchfile
     open(processed, "w").close()
@@ -32,7 +36,7 @@ if __name__ == "__main__":
         print("Must specify one or more receipts/directories!")
         sys.exit(1)
 
-    datasets = [PriceDataSet(sys.argv[1])]
+    datasets = [ReceiptDataSet(sys.argv[1]), PriceDataSet(sys.argv[1])]
 
     if os.path.basename(sys.argv[0]) == "regenerate":
         for dataset in datasets:
@@ -47,4 +51,4 @@ if __name__ == "__main__":
 
             else:
                 print("Processing {}...".format(path))
-                label_for_datasets(path, datasets, force=True)
+                label_for_datasets(path, datasets)
