@@ -4,6 +4,7 @@ from __future__ import absolute_import, print_function, division, unicode_litera
 
 import os
 import sys
+from glob import glob
 
 from dataset import PriceDataSet, ReceiptDataSet
 from question import SkipInput
