@@ -38,7 +38,7 @@ class Receipt(object):
         self.by_position = {t._position: t for t in self.tokens}
 
     def open(self):
-        return open(self.path)
+        return open(self.path, "rb")
 
 
     def format(self, out_stream, highlighted_tokens=None, formatter=None):
