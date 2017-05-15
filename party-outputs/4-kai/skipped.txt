@@ -1,0 +1,65 @@
+receipts-4/1494462224-e88e3389fb6b40f09d0ba361f329c9a5-222c800-uKGlgD.receipt   # empty
+receipts-4/1494462392-77693b3afd9a45d8b4dbb0f90d8b01df-3466d0e6-zmwOuV.receipt  # gibberish
+receipts-4/1494462765-77693b3afd9a45d8b4dbb0f90d8b01df-8f4fd33e-Rap4zg.receipt  # gibberish
+receipts-4/1494462928-27a67e3ffa5243f9a8e5ccb962021373-904c4f4-3e_JyA.receipt   # [c] credit card slip, but it has only 1 number on it, so I can't seem to get past Subtotal/Total
+receipts-4/1494463265-a19b62abf86f44bdabb7a3d25d581200-64a36d21-PoLT-X.receipt  # gibberish, begin 666
+receipts-4/1494463636-3cce95ced6d14a0b9113fcc1e5a4aaec-a19c29ba-2oj1O9.receipt  # gibberish, begin 666
+receipts-4/1494464097-27faaad4e5744140a335c4b2cd7ffd5f-cd075011-GXUJUm.receipt  # gibberish, JBLK
+receipts-4/1494464111-6d27a79ce1cb470ca8f7f091b5217975-e913bfad-TCKsyr.receipt  # gibberish, 1 line
+receipts-4/1494464171-a19b62abf86f44bdabb7a3d25d581200-cb4481e5-LwYsAW.receipt  # gibberish, begin 666
+receipts-4/1494464218-968ab56d5ec144bf8695d6c230d6b604-649a57bd-fxbPMe.receipt  # credit card slip, 1 number
+receipts-4/1494464228-30070e91d1b2462ca3e1d111749653bf-29957625-Z0TLdS.receipt  # gibberish, begin 666
+receipts-4/1494464322-77693b3afd9a45d8b4dbb0f90d8b01df-1dc41600-KyDEB5.receipt  # gibberish, begin 666
+receipts-4/1494464454-587f3107ffa04d97b164caaa52270a2d-bd35a7e4-Q2g_w2.receipt  # gibberish, begin 666
+receipts-4/1494464468-802a0457635b4704afd6c2aa15164a82-8d453f01-Qwmsv5.receipt  # gibberish, begin 666
+receipts-4/1494464719-a4e6659061ea4afc8b14d8daee58071f-a5eb907a-D9OrSE.receipt  # gibberish, begin 666
+receipts-4/1494464748-0ace268b5eeb489193c80be2a559a0d4-738be96-wtPI5t.receipt   # credit card slip, 1 number
+receipts-4/1494464776-e88e3389fb6b40f09d0ba361f329c9a5-222c800-hRjPnD.receipt   # empty
+receipts-4/1494464814-a4e6659061ea4afc8b14d8daee58071f-ec5ddf61-ypdV95.receipt  # credit card slip, 1 number
+receipts-4/1494465022-d2d3c962627c42a0a895e59f9170db35-d1e26867-AlFh0R.receipt  # gibberish, begin 666
+receipts-4/1494465070-b5af39cbe8d2430d8d8ac1d735059b86-bd9aa5c1-OxQnhW.receipt  # credit card slip, no number
+receipts-4/1494465099-1f9fc0acb6f341cb932769452e582d53-45499b90-JND9zy.receipt  # both bill and credit card slip
+receipts-4/1494465117-b1d92f93d102491e88823076b7c14fd1-1b65d67c-fevhUA.receipt  # gibberish, JBLK
+receipts-4/1494465136-b0b834b67c564b18a0154677f575c0cd-dc6003bb-HsOwln.receipt  # partial receipt
+receipts-4/1494465210-83aebe9edefb45e898a5af843fb9c8c9-46fe1f48-nHyi4u.receipt  # gibberish, begin 666
+receipts-4/1494465278-461767cba9d8446d925b321da6c8cc62-73d9b3ea-WdVB_K.receipt  # gibberish, begin 666
+receipts-4/1494465304-1782ee89f3004ada98faf4a14183abda-e3cde8d7-kr_zfU.receipt  # credit card slip, no number
+receipts-4/1494465450-c4d974358bcf423e8385a3bf20470d91-c74c2d39-0dIXrA.receipt  # gibberish, begin 666
+receipts-4/1494465647-6802553453cb4906959b27ff70a31b9e-210df6e2-FG9vF4.receipt  # credit card slip, 1 number
+receipts-4/1494465832-b1615127d40c49a1a7603dc7cc4b0fd0-9be9fd10-MR0FMM.receipt  # credit card slip, no number
+receipts-4/1494465873-4305144a44d344d491dd4fe197392df3-e87af36f-1H--RK.receipt  # gibberish, begin 666
+receipts-4/1494466328-da008b0554dd422580b59364029aa595-8109b0ae-Q_YsH2.receipt  # credit card slip, 1 number
+receipts-4/1494466435-c769c0b636164e6fac9e8232946cfba1-1451b232-bsAcqE.receipt  # credit card slip, no number
+receipts-4/1494466776-4450aba76670472181264a0b271a39fe-3f683bf0-cmO0Z0.receipt  # credit card slip, 1 number
+receipts-4/1494466979-c1380912120f45ee85c2c1f6ad77d2f7-53d92b07-uUU9Rl.receipt  # gibberish, "ReprintLastReceipt"
+receipts-4/1494467047-c1074f9eb18844659025227b22314211-6525fbcf-VpZaIT.receipt  # gibberish
+receipts-4/1494467060-c2bb58a97783436682a32aef2c8631ee-25c5f375-qr_g6M.receipt  # gibberish, begin 666
+receipts-4/1494467230-965ab67a0bd24fb49e78b75f1ac8e970-d7498045-7ANExC.receipt  # gibberish, begin 666
+receipts-4/1494467285-4fda4cc04ece46eba486f9bf8b1364a1-1acb2b07-O7_AAP.receipt  # gibberish, begin 666
+receipts-4/1494467297-8c335055025a41969a6dc593bbd37f44-519f0efc-KQ8NCm.receipt  # credit card slip, 1 number
+receipts-4/1494467306-6a2a8b12d3694ac883cf9b71fc71e7de-3622f0c6-3leyXI.receipt  # credit card slip, no numbers
+receipts-4/1494467607-f6afbdaede5c4b35b51bf880afc7edb3-c33e8d8a-P1gIFc.receipt  # credit card slip, no numbers
+receipts-4/1494467623-bca809c933a7467b86a0bf0364365907-dce8907c-xdSwnd.receipt  # gibberish
+receipts-4/1494467819-1a780471d89645e49d78943a1245371f-53ade43c-yPC4CW.receipt  # gibberish, "ReprintLastReceipt"
+receipts-4/1494467824-da700a7ac96c4754a2553d91f33e4936-e69e9d45-B5_FuK.receipt  # gibberish, begin 666
+receipts-4/1494468058-835151af60d641fd88835f776f055e27-7d97c523-AKfjBw.receipt  # gibberish, begin 666
+receipts-4/1494468128-28a3f4e5fcb14818aea8083551b3b466-e9d0dc06-KBc6pJ.receipt  # credit card slip, 1 number
+receipts-4/1494468240-1a60754e8ab445ecaddd5e79eaaa4931-6b7a40bf-EYgznM.receipt  # credit card slip, no numbers
+receipts-4/1494468249-84e78570784840ac84df6a74aa6982cc-9a55bcbd-uHmldi.receipt  # gibberish, begin 666
+receipts-4/1494468398-ea948de1700b4cd69586fffc17abd8dd-a10d1b06-owLrTY.receipt  # credit card slip, 1 number
+receipts-4/1494468409-b6e18c5b33934704bc0efd971def386f-222c800-WEXpV2.receipt   # empty
+receipts-4/1494468467-802a0457635b4704afd6c2aa15164a82-9bb4544-TJi8e5.receipt   # gibberish, begin 666
+receipts-4/1494468469-695ddd6b6de54949aa9f73bffd889811-9f76bba6-syWhdT.receipt  # credit card slip, no numbers
+receipts-4/1494468471-74fc4a36358644918f08a792ed0ae99d-e50bb244-VsRXRm.receipt  # credit card slip, 1 number
+receipts-4/1494468477-bf2897b411574ee3803f8a76e8e8b60c-7fae3cdb-KPgTD0.receipt  # credit card slip, 1 number
+receipts-4/1494468628-bd5c9f50be0642b6bd33f12823acda6f-2c986cb7-K6_kLR.receipt  # gibberish, begin 666
+receipts-4/1494474995-49608c8639a24a698b011ce0104bfd87-3ae6dfa-c8vOq7.receipt   # gibberish, begin 666
+receipts-4/1494515801-2d40b0e0fcf6460cb49c1d595d8b8766-ce183a1-zGFZgU.receipt   # gibberish, begin 666
+receipts-4/1494518840-42dffa93b5d644139bedb461e3f96a94-e21f7656-1viili.receipt  # gibberish, begin 666
+receipts-4/1494519669-f2d4cac4b452452da3cf527862f8cdf8-809ab85b-cvUcDF.receipt  # gibberish, begin 666
+receipts-4/1494521482-7797b45d123f461f84370397f5188a39-d25ad962-oU7HZT.receipt  # empty
+receipts-4/1494524472-42dffa93b5d644139bedb461e3f96a94-2042bb4f-l7aFAm.receipt  # gibberish, begin 666
+receipts-4/1494526651-f30923c283b041b4b6bfa6ed8ff03949-43f6a01a-fTJ_ar.receipt  # gibberish, begin 666
+receipts-4/1494528269-c7e4c77acda24d64915e5abe035ffdfc-844d2cde-voqLmf.receipt  # gibberish, begin 666
+receipts-4/1494529690-480ed27541da4c50b497a41bd66f2862-885efd9e-a1rvx3.receipt  # gibberish, begin 666
+
