@@ -1,3 +1,4 @@
-from app import app
+from receipts.app import init_app
 
-app.run()
+if __name__ == "__main__":
+    init_app().run()

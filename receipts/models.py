@@ -1,7 +1,4 @@
 from flask_sqlalchemy import SQLAlchemy, Model
-from flask_migrate import Migrate
-
-from . import app
 
 
 class Base(Model):
@@ -14,8 +11,7 @@ class Base(Model):
         return ret
 
 
-db = SQLAlchemy(app, model_class=Base, session_options={"autocommit": True})
-migrate = Migrate(app, db)
+db = SQLAlchemy(model_class=Base, session_options={"autocommit": True})
 
 
 class DataClass(db.Model):
@@ -72,6 +68,21 @@ class Disagreement(db.Model):
     model = db.relationship("DataModel")
 
 
+class PendingLabel(db.Model):
+    __tablename__ = "pending_label"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    document_id = db.Column(db.ForeignKey("document.id"))
+    position = db.Column(db.Integer)
+
+    data_class_id = db.Column(db.ForeignKey("data_class.id"))
+    data_class = db.relationship("DataClass")
+
+    user_id = db.Column(db.ForeignKey("user.id"))
+    user = db.relationship("User", backref="pending_labels")
+
+
 class Document(db.Model):
     __tablename__ = "document"
 
@@ -79,3 +90,9 @@ class Document(db.Model):
 
     path = db.Column(db.String)
     labels = db.relationship("Label", backref="document")
+
+
+class User(db.Model):
+    __tablename__ = "user"
+
+    id = db.Column(db.Integer, primary_key = True)
