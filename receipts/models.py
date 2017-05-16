@@ -26,6 +26,8 @@ class DataClass(db.Model):
     name = db.Column(db.String)
     model_id = db.Column(db.ForeignKey("data_model.id"))
 
+    labels = db.relationship("Label", back_populates="data_class", lazy="dynamic")
+
 
 class DataModel(db.Model):
     __tablename__ = "data_model"
@@ -33,7 +35,9 @@ class DataModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     name = db.Column(db.String, index=True)
-    classes = db.relationship("DataClass", backref="model")
+    classes = db.relationship("DataClass", backref="model", lazy="dynamic")
+
+    longname = db.Column(db.String)
 
 
 class Label(db.Model):
@@ -48,7 +52,7 @@ class Label(db.Model):
     position = db.Column(db.Integer)
 
     data_class_id = db.Column(db.ForeignKey("data_class.id"))
-    data_class = db.relationship("DataClass")
+    data_class = db.relationship("DataClass", back_populates="labels")
 
 
 class Disagreement(db.Model):
