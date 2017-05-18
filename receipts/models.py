@@ -39,11 +39,14 @@ class DataModel(db.Model):
 
     longname = db.Column(db.String)
 
+    labels = db.relationship("Label", back_populates="model", lazy="dynamic")
+    pending_labels = db.relationship("PendingLabel", back_populates="model", lazy="dynamic")
+
 
 class Label(db.Model):
     __tablename__ = "label"
     __table_args__ = (
-        db.UniqueConstraint("document_id", "position"),
+        db.UniqueConstraint("document_id", "position", "model_id"),
     )
 
     id = db.Column(db.Integer, primary_key=True)
@@ -54,37 +57,45 @@ class Label(db.Model):
     data_class_id = db.Column(db.ForeignKey("data_class.id"))
     data_class = db.relationship("DataClass", back_populates="labels")
 
-
-class Disagreement(db.Model):
-    __tablename__ = "disagreement"
-    __table_args__ = (
-        db.UniqueConstraint("model_id", "document_id", "position"),
-    )
-
-    id = db.Column(db.Integer, primary_key=True)
-
-    position = db.Column(db.Integer)
-    document_id = db.Column(db.ForeignKey("document.id"))
     model_id = db.Column(db.ForeignKey("data_model.id"))
-    responses = db.Column(db.String)
-
-    document = db.relationship("Document")
-    model = db.relationship("DataModel")
+    model = db.relationship("DataModel", back_populates="labels")
 
 
 class PendingLabel(db.Model):
     __tablename__ = "pending_label"
+    __table_args__ = (
+        db.UniqueConstraint("document_id", "position", "model_id"),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
 
     document_id = db.Column(db.ForeignKey("document.id"))
+    document = db.relationship("Document", back_populates="pending_labels")
+
     position = db.Column(db.Integer)
 
-    data_class_id = db.Column(db.ForeignKey("data_class.id"))
-    data_class = db.relationship("DataClass")
+    model_id = db.Column(db.ForeignKey("data_model.id"))
+    model = db.relationship("DataModel", back_populates="pending_labels")
+
+    responses = db.relationship("PendingLabelResponse", back_populates="pending_label")
+
+
+class PendingLabelResponse(db.Model):
+    __tablename__ = "pending_label_response"
+    __table_args__ = (
+        db.UniqueConstraint("pending_label_id", "user_id"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    pending_label_id = db.Column(db.ForeignKey("pending_label.id"))
+    pending_label = db.relationship("PendingLabel", back_populates="responses")
 
     user_id = db.Column(db.ForeignKey("user.id"))
     user = db.relationship("User", backref="pending_labels")
+
+    data_class_id = db.Column(db.ForeignKey("data_class.id"))
+    data_class = db.relationship("DataClass")
 
 
 class Document(db.Model):
@@ -94,9 +105,12 @@ class Document(db.Model):
 
     path = db.Column(db.String)
     labels = db.relationship("Label", backref="document")
+    pending_labels = db.relationship("PendingLabel", back_populates="document")
 
 
 class User(db.Model):
     __tablename__ = "user"
 
-    id = db.Column(db.Integer, primary_key = True)
+    id = db.Column(db.Integer, primary_key=True)
+
+    username = db.Column(db.String(50), unique=True)

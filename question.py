@@ -55,7 +55,7 @@ class Question(object):
         if answer_text == "skip":
             raise SkipInput
 
-        if not answer_text:
+        if not answer_text and self.is_required:
             raise ValueError("No answer provided; try again!")
 
         return answer_text

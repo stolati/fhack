@@ -153,7 +153,7 @@ class PriceDataSet(DataSet):
             MultipleChoiceQuestion(
                 "Which price (or prices) is the {}".format(name),
                 choices=list(map(text_type, list(range(1, len(receipt.prices) + 1)))),
-                hide_choices=True)
+                hide_choices=True, is_required=False)
             for name in self.class_names[1:]
         ] 
 

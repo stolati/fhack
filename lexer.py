@@ -91,7 +91,7 @@ def get_lexer():
         return t
 
     def t_MONEY_AMOUNT(t):
-        r'(?P<negative_sign>[-(])?\$?(?P<money_amount>[\d,]*\.\d{2})'
+        r'(?P<negative_sign>[-(])?\$?\s{0,5}(?P<money_amount>[\d,]*\.\d{2})'
         return t
         
     def t_NUMBER(t):
